@@ -42,7 +42,24 @@
 			<artifactId>jstl</artifactId>
 			<version>1.2</version>
 		</dependency>
- 
+                <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+                <dependency>
+                    <groupId>mysql</groupId>
+                    <artifactId>mysql-connector-java</artifactId>
+                    <version>6.0.5</version>
+                </dependency>
+                <!-- https://mvnrepository.com/artifact/org.neo4j/neo4j -->
+                <dependency>
+                   <groupId>org.neo4j</groupId>
+                   <artifactId>neo4j</artifactId>
+                   <version>3.1.0-M10</version>
+                </dependency>
+                <!-- https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver -->
+                <dependency>
+                    <groupId>org.mongodb</groupId>
+                    <artifactId>mongo-java-driver</artifactId>
+                    <version>3.3.0</version>
+                </dependency>
 	</dependencies>
  
   <build>
