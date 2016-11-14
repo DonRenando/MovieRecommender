@@ -11,6 +11,12 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.camillepradel.movierecommender.model.Genre;
 import com.camillepradel.movierecommender.model.Movie;
+import java.net.ConnectException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
 
 @Controller
 public class MainController {
@@ -22,9 +28,33 @@ public class MainController {
 		System.out.println("in controller");
  
 		ModelAndView mv = new ModelAndView("helloworld");
-		mv.addObject("message", message);
+
+                Session session = null;
+                try {
+                session =Neo4jConnector.getInstance().getConnection();
+                
+                } catch (ConnectException ex) {
+                Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                StatementResult result = session.run( "MATCH (u:User) RETURN COUNT( DISTINCT u.occupation) AS CPT" );
+                while ( result.hasNext() )
+                {
+                Record record = result.next();
+                System.out.println( record.toString() );
+                 mv.addObject("message", record.get( "CPT" ));
+                }
+                
+                try {
+                Neo4jConnector.getInstance().close();
+            } catch (ConnectException ex) {
+                Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+                
+               
 		mv.addObject("name", name);
 		return mv;
+
+      
 	}
 
 	@RequestMapping("/movies")
@@ -47,5 +77,7 @@ public class MainController {
 		mv.addObject("userId", userId);
 		mv.addObject("movies", movies);
 		return mv;
+                
+                
 	}
 }
