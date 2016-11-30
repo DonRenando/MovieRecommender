@@ -11,6 +11,17 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.camillepradel.movierecommender.model.Genre;
 import com.camillepradel.movierecommender.model.Movie;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import java.util.ArrayList;
+import org.bson.Document;
 
 @Controller
 public class MainController {
@@ -34,18 +45,61 @@ public class MainController {
 
 		// TODO: write query to retrieve all movies from DB or all movies rated by user with id userId,
 		// depending on whether or not a value was given for userId
-		List<Movie> movies = new LinkedList<Movie>();
-		Genre genre0 = new Genre(0, "genre0");
-		Genre genre1 = new Genre(1, "genre1");
-		Genre genre2 = new Genre(2, "genre2");
-		movies.add(new Movie(0, "Titre 0", Arrays.asList(new Genre[] {genre0, genre1})));
-		movies.add(new Movie(1, "Titre 1", Arrays.asList(new Genre[] {genre0, genre2})));
-		movies.add(new Movie(2, "Titre 2", Arrays.asList(new Genre[] {genre1})));
-		movies.add(new Movie(3, "Titre 3", Arrays.asList(new Genre[] {genre0, genre1, genre2})));
+             
+                List<Movie> movies = getMoviesMongoDBByUser(userId);
 
 		ModelAndView mv = new ModelAndView("movies");
 		mv.addObject("userId", userId);
 		mv.addObject("movies", movies);
 		return mv;
 	}
+        
+        public List<Movie>getMoviesMongoDBByUser(Integer user_id){
+            ArrayList<Movie> listMovies= new  ArrayList<Movie>();
+            MongoCursor<Document> cursor;
+            
+            MongoDatabase db = MongoDBConnector.getInstance().getConnexion();
+            MongoCollection<Document> movies = db.getCollection("movies");
+            if(user_id != null)
+            {
+                MongoCollection<Document> users = db.getCollection("users");
+                BasicDBObject whereQuery = new BasicDBObject();
+                whereQuery.put("_id", user_id);
+                
+                cursor = users.find(whereQuery).iterator();
+                Document user;
+                try {
+                    user = cursor.next();
+                } catch(Exception e)
+                {
+                    return new ArrayList<Movie>();
+                }
+                ArrayList<Document> user_movies;
+                user_movies = (ArrayList) user.get("movies");
+                BasicDBObject inQuery = new BasicDBObject();
+                List<Integer> list = new ArrayList<Integer>();
+                for(Document movie : user_movies)
+                    list.add(movie.getInteger("movieid"));
+
+                inQuery.put("_id", new BasicDBObject("$in", list));
+                cursor = movies.find(inQuery).iterator();
+            }
+            else
+            {
+                cursor = movies.find().iterator();
+            }
+            
+            while (cursor.hasNext()) {
+                Document movie = cursor.next();
+                String[] genres;
+                genres = movie.getString("genres").split("\\|");
+                ArrayList<Genre> listGenres = new ArrayList<Genre>();
+                for(String genre : genres){
+                    listGenres.add(new Genre(1,genre));
+                }
+                
+                listMovies.add(new Movie(movie.getInteger("_id"), movie.getString("title"), listGenres));
+            }
+            return listMovies;
+        }
 }
