@@ -28,35 +28,20 @@ public class Neo4jConnector {
             if (INSTANCE == null)
             { 
                 INSTANCE = new Neo4jConnector();
-                driver = GraphDatabase.driver( "bolt://localhost", AuthTokens.basic( "neo4j", "root1234" ) );
-                session = driver.session();
+
             }
             return INSTANCE;
     }
 
     public Session getConnection() throws ConnectException {
-        if (session == null || driver == null){
-            Neo4jConnector.getInstance();
-        }
+                this.driver = GraphDatabase.driver( "bolt://localhost", AuthTokens.basic( "neo4j", "root1234" ) );
+                this.session = driver.session();
         return this.session;
     }
 
-    public boolean close() throws ConnectException {
-            boolean etat = false;
-            if (session != null) {
-                    try {
-                        session.close();
-                        driver.close();
-                        etat = true;
-                    } catch (Neo4jException e) {
-                        etat = false;
-                    }
-            } else {
-                    throw new ConnectException();
-
-            }
-
-            return etat;
+    public void close()  {
+                        this.session.close();
+                        this.driver.close();
     }
 
 }
