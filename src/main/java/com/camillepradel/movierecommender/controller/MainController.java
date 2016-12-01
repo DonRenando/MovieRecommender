@@ -13,26 +13,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.camillepradel.movierecommender.model.Genre;
 import com.camillepradel.movierecommender.model.Movie;
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
-import java.util.ArrayList;
-import org.bson.Document;
-import java.net.ConnectException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
 import com.camillepradel.movierecommender.model.Rating;
-import java.util.HashMap;
-import java.util.Iterator;
 
 @Controller
 public class MainController {
@@ -54,161 +35,24 @@ public class MainController {
 			@RequestParam(value = "user_id", required = false) Integer userId) {
                 
 		//List<Movie> movies = getMoviesNeo4JByUser(userId);
-                List<Movie> movies = getMoviesMongoDBByUser(userId);
+                List<Movie> movies = MongoDBController.getMoviesMongoDBByUser(userId);
 
 		ModelAndView mv = new ModelAndView("movies");
 		mv.addObject("userId", userId);
 		mv.addObject("movies", movies);
 		return mv;
 	}
-        public List<Movie>getMoviesNeo4JByUser (Integer userId){
-            List<Movie> movies = new LinkedList<Movie>();
-            String oldMovie=null;
-            int id=0;
-
-            StatementResult result = null;
-            try {
-            if (userId != null && userId >=0 ){
-               
-                result = Neo4jConnector.getInstance().getConnection().run( "MATCH (me:User { id: "+userId+" })-[:RATED]->(movie:Movie) -[:CATEGORIZED_AS]->(g:Genre) RETURN movie.title as movies,  collect(g.name) as genre;" );
-            }
-            else{
-                result = Neo4jConnector.getInstance().getConnection().run( "MATCH (m:Movie) -[:CATEGORIZED_AS]->(g:Genre) RETURN m.title as movies, collect(g.name) as genre;" );
-            }
-            } catch (ConnectException ex) {
-                    Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
-            }
-             finally{
-                  Neo4jConnector.getInstance().close();
-             }
-            while ( result.hasNext() )
-            {
-               Record record = result.next();
-               String[] listGenre = record.get("genre").toString().split(",");
-                List<Genre> listTypeGenre = new LinkedList<Genre>();
-                for(String g : listGenre){
-                    if(g != null)
-                        listTypeGenre.add(new Genre(id, g.replace("\"", "").replace("[", "").replace("]", "")));
-                    
-                }
-               movies.add(new Movie(id, record.get("movies").asString(), (listTypeGenre.isEmpty())?null:listTypeGenre ) );
-            id+=1;
-            }
-            return movies;
-        }
-        
-        
-        public List<Movie>getMoviesMongoDBByUser(Integer user_id){
-            ArrayList<Movie> listMovies= new  ArrayList<Movie>();
-            MongoCursor<Document> cursor;
-            
-            MongoDatabase db = MongoDBConnector.getInstance().getConnexion();
-            MongoCollection<Document> movies = db.getCollection("movies");
-            if(user_id != null)
-            {
-                MongoCollection<Document> users = db.getCollection("users");
-                BasicDBObject whereQuery = new BasicDBObject();
-                whereQuery.put("_id", user_id);
-                
-                cursor = users.find(whereQuery).iterator();
-                Document user;
-                try {
-                    user = cursor.next();
-                } catch(Exception e)
-                {
-                    return new ArrayList<Movie>();
-                }
-                ArrayList<Document> user_movies;
-                user_movies = (ArrayList) user.get("movies");
-                BasicDBObject inQuery = new BasicDBObject();
-                List<Integer> list = new ArrayList<Integer>();
-                for(Document movie : user_movies)
-                    list.add(movie.getInteger("movieid"));
-
-                inQuery.put("_id", new BasicDBObject("$in", list));
-                cursor = movies.find(inQuery).iterator();
-            }
-            else
-            {
-                cursor = movies.find().iterator();
-            }
-            
-            while (cursor.hasNext()) {
-                Document movie = cursor.next();
-                String[] genres;
-                genres = movie.getString("genres").split("\\|");
-                ArrayList<Genre> listGenres = new ArrayList<Genre>();
-                for(String genre : genres){
-                    listGenres.add(new Genre(1,genre));
-                }
-                
-                listMovies.add(new Movie(movie.getInteger("_id"), movie.getString("title"), listGenres));
-            }
-            return listMovies;
-        }
-        
-        
-        public List<Rating>getRatingMongoDBByUser(Integer user_id){
-            ArrayList<Rating> listRating= new  ArrayList<Rating>();
-            MongoCursor<Document> cursor;
-            
-            MongoDatabase db = MongoDBConnector.getInstance().getConnexion();
-            MongoCollection<Document> users = db.getCollection("users");
-            MongoCollection<Document> movies = db.getCollection("movies");
-            
-            BasicDBObject whereQuery = new BasicDBObject();
-            whereQuery.put("_id", user_id);
-
-            cursor = users.find(whereQuery).iterator();
-            Document user;
-            try {
-                user = cursor.next();
-            } catch(Exception e)
-            {
-                return new ArrayList<Rating>();
-            }
-            
-            ArrayList<Document> user_movies = (ArrayList) user.get("movies");
-            BasicDBObject inQuery = new BasicDBObject();
-            HashMap<Integer,Integer> list = new HashMap<Integer,Integer>();
-            for(Document movie : user_movies)
-                list.put(movie.getInteger("movieid"),movie.getInteger("rating"));
-
-            inQuery.put("_id", new BasicDBObject("$in", list.keySet()));
-            cursor = movies.find(inQuery).iterator();
-          
-            while (cursor.hasNext()) {
-                Document movie = cursor.next();
-                String[] genres;
-                genres = movie.getString("genres").split("\\|");
-                ArrayList<Genre> listGenres = new ArrayList<Genre>();
-                for(String genre : genres){
-                    listGenres.add(new Genre(1,genre));
-                }
-                
-                listRating.add(new Rating(new Movie(movie.getInteger("_id"), movie.getString("title"), 
-                        listGenres),user_id, list.get(movie.getInteger("_id"))));
-            }
-            return listRating;
-        }
 
 	@RequestMapping(value = "/movieratings", method = RequestMethod.GET)
 	public ModelAndView showMoviesRattings(
 			@RequestParam(value = "user_id", required = true) Integer userId) {
 		System.out.println("GET /movieratings for user " + userId);
 
-		// TODO: write query to retrieve all movies from DB
-		List<Movie> allMovies = new LinkedList<Movie>();
-		Genre genre0 = new Genre(0, "genre0");
-		Genre genre1 = new Genre(1, "genre1");
-		Genre genre2 = new Genre(2, "genre2");
-		allMovies.add(new Movie(0, "Titre 0", Arrays.asList(new Genre[] {genre0, genre1})));
-		allMovies.add(new Movie(1, "Titre 1", Arrays.asList(new Genre[] {genre0, genre2})));
-		allMovies.add(new Movie(2, "Titre 2", Arrays.asList(new Genre[] {genre1})));
-		allMovies.add(new Movie(3, "Titre 3", Arrays.asList(new Genre[] {genre0, genre1, genre2})));
+		// write query to retrieve all movies from DB
+		List<Movie> allMovies = MongoDBController.getMoviesMongoDBByUser(null);
 
-		// TODO: write query to retrieve all ratings from the specified user
-		List<Rating> ratings = getRatingMongoDBByUser(userId);
+		// write query to retrieve all ratings from the specified user
+		List<Rating> ratings = MongoDBController.getRatingMongoDBByUser(userId);
 
 		ModelAndView mv = new ModelAndView("movieratings");
 		mv.addObject("userId", userId);
