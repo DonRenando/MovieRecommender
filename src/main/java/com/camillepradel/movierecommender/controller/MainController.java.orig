@@ -13,23 +13,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.camillepradel.movierecommender.model.Genre;
 import com.camillepradel.movierecommender.model.Movie;
-import com.mongodb.BasicDBList;
+<<<<<<< HEAD
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import java.util.ArrayList;
 import org.bson.Document;
-import java.net.ConnectException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
+=======
+>>>>>>> a72a92de3cdc61c123708e0446b315525a3fc276
 import com.camillepradel.movierecommender.model.Rating;
 
 @Controller
@@ -40,7 +32,6 @@ public class MainController {
 	public ModelAndView showMessage(
 			@RequestParam(value = "name", required = false, defaultValue = "World") String name) {
 		System.out.println("in controller");
- 
 		ModelAndView mv = new ModelAndView("helloworld");
 		mv.addObject("message", message);
 		mv.addObject("name", name);
@@ -51,29 +42,106 @@ public class MainController {
 	public ModelAndView showMovies(
 			@RequestParam(value = "user_id", required = false) Integer userId) {
                 
-		//List<Movie> movies = Neo4JController.getMoviesNeo4JByUser(userId);
+<<<<<<< HEAD
+		List<Movie> movies = Neo4JController.getMoviesNeo4JByUser(userId);
+                //List<Movie> movies = getMoviesMongoDBByUser(userId);
+=======
+		//List<Movie> movies = getMoviesNeo4JByUser(userId);
                 List<Movie> movies = MongoDBController.getMoviesMongoDBByUser(userId);
+>>>>>>> a72a92de3cdc61c123708e0446b315525a3fc276
 
 		ModelAndView mv = new ModelAndView("movies");
 		mv.addObject("userId", userId);
 		mv.addObject("movies", movies);
 		return mv;
 	}
+<<<<<<< HEAD
         
+
+        
+
+        
+        
+        public List<Movie>getMoviesMongoDBByUser(Integer user_id){
+            ArrayList<Movie> listMovies= new  ArrayList<Movie>();
+            MongoCursor<Document> cursor;
+            
+            MongoDatabase db = MongoDBConnector.getInstance().getConnexion();
+            MongoCollection<Document> movies = db.getCollection("movies");
+            if(user_id != null)
+            {
+                MongoCollection<Document> users = db.getCollection("users");
+                BasicDBObject whereQuery = new BasicDBObject();
+                whereQuery.put("_id", user_id);
+                
+                cursor = users.find(whereQuery).iterator();
+                Document user;
+                try {
+                    user = cursor.next();
+                } catch(Exception e)
+                {
+                    return new ArrayList<Movie>();
+                }
+                ArrayList<Document> user_movies;
+                user_movies = (ArrayList) user.get("movies");
+                BasicDBObject inQuery = new BasicDBObject();
+                List<Integer> list = new ArrayList<Integer>();
+                for(Document movie : user_movies)
+                    list.add(movie.getInteger("movieid"));
+
+                inQuery.put("_id", new BasicDBObject("$in", list));
+                cursor = movies.find(inQuery).iterator();
+            }
+            else
+            {
+                cursor = movies.find().iterator();
+            }
+            
+            while (cursor.hasNext()) {
+                Document movie = cursor.next();
+                String[] genres;
+                genres = movie.getString("genres").split("\\|");
+                ArrayList<Genre> listGenres = new ArrayList<Genre>();
+                for(String genre : genres){
+                    listGenres.add(new Genre(1,genre));
+                }
+                
+                listMovies.add(new Movie(movie.getInteger("_id"), movie.getString("title"), listGenres));
+            }
+            return listMovies;
+        }
+=======
+>>>>>>> a72a92de3cdc61c123708e0446b315525a3fc276
 
 	@RequestMapping(value = "/movieratings", method = RequestMethod.GET)
 	public ModelAndView showMoviesRattings(
 			@RequestParam(value = "user_id", required = true) Integer userId) {
 		System.out.println("GET /movieratings for user " + userId);
 
+<<<<<<< HEAD
+		// TODO: write query to retrieve all movies from DB
+		List<Movie> allMovies = new LinkedList<Movie>();
+		Genre genre0 = new Genre(0, "genre0");
+		Genre genre1 = new Genre(1, "genre1");
+		Genre genre2 = new Genre(2, "genre2");
+		allMovies.add(new Movie(0, "Titre 0", Arrays.asList(new Genre[] {genre0, genre1})));
+		allMovies.add(new Movie(1, "Titre 1", Arrays.asList(new Genre[] {genre0, genre2})));
+		allMovies.add(new Movie(2, "Titre 2", Arrays.asList(new Genre[] {genre1})));
+		allMovies.add(new Movie(3, "Titre 3", Arrays.asList(new Genre[] {genre0, genre1, genre2})));
+
+		// TODO: write query to retrieve all ratings from the specified user
+		List<Rating> ratings = new LinkedList<Rating>();
+		//ratings.add(new Rating(new Movie(0, "Titre 0", Arrays.asList(new Genre[] {genre0, genre1})), userId, 3));
+		//ratings.add(new Rating(new Movie(2, "Titre 2", Arrays.asList(new Genre[] {genre1})), userId, 4));
+=======
 		// write query to retrieve all movies from DB
-		List<Movie> allMovies = MongoDBController.getMoviesMongoDBByUser(userId);
-                //List<Movie> allMovies =Neo4JController.getMoviesNeo4JByUser(userId);
+		List<Movie> allMovies = MongoDBController.getMoviesMongoDBByUser(null);
 
 		// write query to retrieve all ratings from the specified user
 		List<Rating> ratings = MongoDBController.getRatingMongoDBByUser(userId);
-                
-                //List<Rating> ratings=Neo4JController.GetMoviesRatingNeo4JByUser(userId);
+>>>>>>> a72a92de3cdc61c123708e0446b315525a3fc276
+
+                ratings=Neo4JController.GetMoviesRatingNeo4JByUser(userId);
 		ModelAndView mv = new ModelAndView("movieratings");
 		mv.addObject("userId", userId);
 		mv.addObject("allMovies", allMovies);
