@@ -58,7 +58,7 @@ public class Neo4JController {
             
             
         public static List<Rating>GetMoviesRatingNeo4JByUser(Integer userId){
-             List<Rating> moviesRating = new LinkedList<Rating>();
+            List<Rating> moviesRating = new LinkedList<Rating>();
 
             StatementResult result = null;
             try {
@@ -95,6 +95,39 @@ public class Neo4JController {
             }
             return moviesRating;
              
+        }
+        
+        public static void updateMovieRatingNeo4J(Rating note){
+
+            Integer user_id = note.getUserId();
+            try {
+            if (user_id != null && user_id >=0 ){
+               
+               Neo4jConnector.getInstance().getConnection().run( "MATCH (u:User{id:"+user_id+"})-[r:RATED]->(m:Movie)\n" +
+                    "where m.id  ="+note.getMovie().getId()+"\n" +
+                    "delete r" );
+            }
+
+            } catch (ConnectException ex) {
+                    System.out.println(ex);
+            }
+             finally{
+                  Neo4jConnector.getInstance().close();
+             } 
+            
+            
+              try {
+                 Neo4jConnector.getInstance().getConnection().run( "MATCH (u:User{id:"+user_id+"}),(m:Movie)\n" +
+                    "where m.id  = "+note.getMovie().getId()+"\n" +
+                    "CREATE (u)-[r:RATED{note:"+note.getScore()+", timestamp: "+System.currentTimeMillis()+"}]->(m) \n" +
+                    "RETURN *" );
+
+            } catch (ConnectException ex) {
+                   System.out.println(ex);
+            }
+             finally{
+                  Neo4jConnector.getInstance().close();
+             } 
         }
     
 }

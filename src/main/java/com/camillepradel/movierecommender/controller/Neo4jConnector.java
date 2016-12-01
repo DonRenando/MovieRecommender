@@ -6,7 +6,6 @@
 package com.camillepradel.movierecommender.controller;
 import java.net.ConnectException;
 import org.neo4j.driver.v1.*;
-import org.neo4j.driver.v1.exceptions.Neo4jException;
 
 /**
  *
