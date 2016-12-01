@@ -31,6 +31,8 @@ import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import com.camillepradel.movierecommender.model.Rating;
+import java.util.HashMap;
+import java.util.Iterator;
 
 @Controller
 public class MainController {
@@ -144,6 +146,51 @@ public class MainController {
             }
             return listMovies;
         }
+        
+        
+        public List<Rating>getRatingMongoDBByUser(Integer user_id){
+            ArrayList<Rating> listRating= new  ArrayList<Rating>();
+            MongoCursor<Document> cursor;
+            
+            MongoDatabase db = MongoDBConnector.getInstance().getConnexion();
+            MongoCollection<Document> users = db.getCollection("users");
+            MongoCollection<Document> movies = db.getCollection("movies");
+            
+            BasicDBObject whereQuery = new BasicDBObject();
+            whereQuery.put("_id", user_id);
+
+            cursor = users.find(whereQuery).iterator();
+            Document user;
+            try {
+                user = cursor.next();
+            } catch(Exception e)
+            {
+                return new ArrayList<Rating>();
+            }
+            
+            ArrayList<Document> user_movies = (ArrayList) user.get("movies");
+            BasicDBObject inQuery = new BasicDBObject();
+            HashMap<Integer,Integer> list = new HashMap<Integer,Integer>();
+            for(Document movie : user_movies)
+                list.put(movie.getInteger("movieid"),movie.getInteger("rating"));
+
+            inQuery.put("_id", new BasicDBObject("$in", list.keySet()));
+            cursor = movies.find(inQuery).iterator();
+          
+            while (cursor.hasNext()) {
+                Document movie = cursor.next();
+                String[] genres;
+                genres = movie.getString("genres").split("\\|");
+                ArrayList<Genre> listGenres = new ArrayList<Genre>();
+                for(String genre : genres){
+                    listGenres.add(new Genre(1,genre));
+                }
+                
+                listRating.add(new Rating(new Movie(movie.getInteger("_id"), movie.getString("title"), 
+                        listGenres),user_id, list.get(movie.getInteger("_id"))));
+            }
+            return listRating;
+        }
 
 	@RequestMapping(value = "/movieratings", method = RequestMethod.GET)
 	public ModelAndView showMoviesRattings(
@@ -161,9 +208,7 @@ public class MainController {
 		allMovies.add(new Movie(3, "Titre 3", Arrays.asList(new Genre[] {genre0, genre1, genre2})));
 
 		// TODO: write query to retrieve all ratings from the specified user
-		List<Rating> ratings = new LinkedList<Rating>();
-		ratings.add(new Rating(new Movie(0, "Titre 0", Arrays.asList(new Genre[] {genre0, genre1})), userId, 3));
-		ratings.add(new Rating(new Movie(2, "Titre 2", Arrays.asList(new Genre[] {genre1})), userId, 4));
+		List<Rating> ratings = getRatingMongoDBByUser(userId);
 
 		ModelAndView mv = new ModelAndView("movieratings");
 		mv.addObject("userId", userId);
