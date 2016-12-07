@@ -1,6 +1,5 @@
 package com.camillepradel.movierecommender.controller;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import com.camillepradel.movierecommender.model.Genre;
 import com.camillepradel.movierecommender.model.Movie;
 import com.camillepradel.movierecommender.model.Rating;
 
@@ -80,26 +78,16 @@ public class MainController {
 			@RequestParam(value = "processing_mode", required = false, defaultValue = "0") Integer processingMode){
 		System.out.println("GET /movieratings for user " + userId);
 
-		// TODO: process recommendations for specified user exploiting other users ratings
-		//       use different methods depending on processingMode parameter
-		Genre genre0 = new Genre(0, "genre0");
-		Genre genre1 = new Genre(1, "genre1");
-		Genre genre2 = new Genre(2, "genre2");
 		List<Rating> recommendations = new LinkedList<Rating>();
-		String titlePrefix;
-		if (processingMode.equals(0))
-			titlePrefix = "0_";
-		else if (processingMode.equals(1))
-			titlePrefix = "1_";
-		else if (processingMode.equals(2))
-			titlePrefix = "2_";
-		else
-			titlePrefix = "default_";
-		recommendations.add(new Rating(new Movie(0, titlePrefix + "Titre 0", Arrays.asList(new Genre[] {genre0, genre1})), userId, 5));
-		recommendations.add(new Rating(new Movie(1, titlePrefix + "Titre 1", Arrays.asList(new Genre[] {genre0, genre2})), userId, 5));
-		recommendations.add(new Rating(new Movie(2, titlePrefix + "Titre 2", Arrays.asList(new Genre[] {genre1})), userId, 4));
-		recommendations.add(new Rating(new Movie(3, titlePrefix + "Titre 3", Arrays.asList(new Genre[] {genre0, genre1, genre2})), userId, 3));
 
+                if (processingMode.equals(1)){
+                    recommendations = Neo4JController.ProcessRecommendationV1(userId);
+                }
+		else if (processingMode.equals(2)){
+                    recommendations = Neo4JController.ProcessRecommendationV2(userId);
+
+                }
+                
 		ModelAndView mv = new ModelAndView("recommendations");
 		mv.addObject("recommendations", recommendations);
 
