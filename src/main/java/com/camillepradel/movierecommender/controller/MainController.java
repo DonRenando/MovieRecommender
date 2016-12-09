@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import com.camillepradel.movierecommender.model.Genre;
 import com.camillepradel.movierecommender.model.Movie;
 import com.camillepradel.movierecommender.model.Rating;
 
@@ -18,6 +17,10 @@ import com.camillepradel.movierecommender.model.Rating;
 public class MainController {
 	String message = "Welcome to Spring MVC!";
  
+        //Commenter et Decommenter en fonction de BD que l'on veut utiliser
+        DBControllerInterface db = new MongoDBController();
+        //DBControllerInterface db = new Neo4jConnector();
+                
 	@RequestMapping("/hello")
 	public ModelAndView showMessage(
 			@RequestParam(value = "name", required = false, defaultValue = "World") String name) {
@@ -33,8 +36,7 @@ public class MainController {
 	public ModelAndView showMovies(
 			@RequestParam(value = "user_id", required = false) Integer userId) {
                 
-		List<Movie> movies = Neo4JController.getMoviesNeo4JByUser(userId);
-                //List<Movie> movies = MongoDBController.getMoviesMongoDBByUser(userId);
+		List<Movie> movies = db.getMoviesByUser(userId);
 
 		ModelAndView mv = new ModelAndView("movies");
 		mv.addObject("userId", userId);
@@ -49,13 +51,11 @@ public class MainController {
 		System.out.println("GET /movieratings for user " + userId);
 
 		// write query to retrieve all movies from DB
-		//List<Movie> allMovies = MongoDBController.getMoviesMongoDBByUser(null);
-                List<Movie> allMovies =Neo4JController.getMoviesNeo4JByUser(null);
+                List<Movie> allMovies = db.getMoviesByUser(null);
 
-		// write query to retrieve all ratings from the specified user
-		//List<Rating> ratings = MongoDBController.getRatingMongoDBByUser(userId);
+		// write query to retrieve all ratings from the specified user       
+                List<Rating> ratings=db.getRatinByUser(userId);
                 
-                List<Rating> ratings=Neo4JController.GetMoviesRatingNeo4JByUser(userId);
 		ModelAndView mv = new ModelAndView("movieratings");
 		mv.addObject("userId", userId);
 		mv.addObject("allMovies", allMovies);
@@ -69,7 +69,7 @@ public class MainController {
 		System.out.println("POST /movieratings for user " + rating.getUserId()
 											+ ", movie " + rating.getMovie().getTitle()
 											+ ", score " + rating.getScore());
-                Neo4JController.updateMovieRatingNeo4J(rating);
+                db.updateMovieRating(rating);
 		return "redirect:/movieratings?user_id=" + rating.getUserId();
 	}
 
@@ -82,11 +82,10 @@ public class MainController {
 		List<Rating> recommendations = new LinkedList<Rating>();
 
                 if (processingMode.equals(1)){
-                    recommendations = Neo4JController.ProcessRecommendationV1(userId);
+                    recommendations = db.ProcessRecommendationV1(userId);
                 }
 		else if (processingMode.equals(2)){
-                    recommendations = Neo4JController.ProcessRecommendationV2(userId);
-
+                    recommendations = db.ProcessRecommendationV2(userId);
                 }
                 
 		ModelAndView mv = new ModelAndView("recommendations");

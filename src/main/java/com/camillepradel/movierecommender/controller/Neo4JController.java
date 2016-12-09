@@ -20,9 +20,9 @@ import org.neo4j.driver.v1.StatementResult;
  *
  * @author renando
  */
-public class Neo4JController {
+public class Neo4JController implements DBControllerInterface {
 
-    public static List<Movie> getMoviesNeo4JByUser(Integer userId) {
+    public List<Movie> getMoviesByUser(Integer userId) {
         List<Movie> movies = new LinkedList<Movie>();
         int id = 0;
         StatementResult result = null;
@@ -54,7 +54,7 @@ public class Neo4JController {
         return movies;
     }
 
-    public static List<Rating> GetMoviesRatingNeo4JByUser(Integer userId) {
+    public List<Rating> getRatinByUser(Integer userId) {
         List<Rating> moviesRating = new LinkedList<Rating>();
 
         StatementResult result = null;
@@ -92,7 +92,7 @@ public class Neo4JController {
 
     }
 
-    public static void updateMovieRatingNeo4J(Rating note) {
+    public void updateMovieRating(Rating note) {
 
         Integer user_id = note.getUserId();
         try {
@@ -122,7 +122,7 @@ public class Neo4JController {
         }
     }
 
-    public static List<Rating> ProcessRecommendationV1(Integer userId) {
+    public List<Rating> ProcessRecommendationV1(Integer userId) {
 
         List<Rating> ratings = new LinkedList<Rating>();
         StatementResult result = null;
@@ -157,7 +157,7 @@ public class Neo4JController {
 
     }
 
-    public static List<Rating> ProcessRecommendationV2(Integer userId) {
+    public List<Rating> ProcessRecommendationV2(Integer userId) {
 
         List<Rating> ratings = new LinkedList<Rating>();
         StatementResult result = null;
@@ -192,6 +192,10 @@ public class Neo4JController {
         }
         return ratings;
 
+    }
+
+    public List<Rating> ProcessRecommendationV3(Integer userId) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

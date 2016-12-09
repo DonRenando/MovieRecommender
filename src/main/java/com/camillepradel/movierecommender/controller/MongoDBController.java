@@ -26,8 +26,8 @@ import org.bson.Document;
  *
  * @author sidya
  */
-public class MongoDBController {
-    public  static List<Movie>getMoviesMongoDBByUser(Integer user_id){
+public class MongoDBController implements DBControllerInterface {
+    public List<Movie>getMoviesByUser(Integer user_id){
             ArrayList<Movie> listMovies= new  ArrayList<Movie>();
             MongoCursor<Document> cursor;
             
@@ -76,7 +76,7 @@ public class MongoDBController {
             return listMovies;
         }
         
-    public static List<Rating>getRatingMongoDBByUser(Integer user_id){
+    public List<Rating>getRatinByUser(Integer user_id){
             ArrayList<Rating> listRating= new  ArrayList<Rating>();
             MongoCursor<Document> cursor;
             
@@ -120,7 +120,7 @@ public class MongoDBController {
             return listRating;
         }
 
-    public static void updateMovieRating(Rating rating) {
+    public void updateMovieRating(Rating rating) {
         ArrayList<Rating> listRating= new  ArrayList<Rating>();
         MongoCursor<Document> cursor;
 
@@ -154,5 +154,17 @@ public class MongoDBController {
         users.updateOne(searchQuery,deleteDocument);
         users.updateOne(searchQuery, newDocument);
         
+    }
+
+    public List<Rating> ProcessRecommendationV1(Integer userId) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public List<Rating> ProcessRecommendationV2(Integer userId) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public List<Rating> ProcessRecommendationV3(Integer userId) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
