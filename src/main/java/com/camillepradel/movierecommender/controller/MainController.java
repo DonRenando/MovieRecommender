@@ -19,7 +19,7 @@ public class MainController {
  
         //Commenter et Decommenter en fonction de BD que l'on veut utiliser
         DBControllerInterface db = new MongoDBController();
-        //DBControllerInterface db = new Neo4jConnector();
+        //DBControllerInterface db = new Neo4JController();
                 
 	@RequestMapping("/hello")
 	public ModelAndView showMessage(
@@ -76,7 +76,7 @@ public class MainController {
 	@RequestMapping(value = "/recommendations", method = RequestMethod.GET)
 	public ModelAndView ProcessRecommendations(
 			@RequestParam(value = "user_id", required = true) Integer userId,
-			@RequestParam(value = "processing_mode", required = false, defaultValue = "0") Integer processingMode){
+			@RequestParam(value = "processing_mode", required = false, defaultValue = "1") Integer processingMode){
 		System.out.println("GET /movieratings for user " + userId);
 
 		List<Rating> recommendations = new LinkedList<Rating>();
@@ -86,6 +86,9 @@ public class MainController {
                 }
 		else if (processingMode.equals(2)){
                     recommendations = db.ProcessRecommendationV2(userId);
+                }
+                else if (processingMode.equals(3)){
+                    recommendations = db.ProcessRecommendationV3(userId);
                 }
                 
 		ModelAndView mv = new ModelAndView("recommendations");

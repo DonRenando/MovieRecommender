@@ -1,6 +1,7 @@
 package com.camillepradel.movierecommender.model;
 
 import java.util.Arrays;
+import java.util.Comparator;
 
 public class Rating {
 
@@ -64,4 +65,13 @@ public class Rating {
 	public void setScore(int score) {
 		this.score = score;
 	}
+
+    public static Comparator<Rating> CompareScoreDesc
+                      = new Comparator<Rating>() {
+
+        public int compare(Rating r1, Rating r2) {
+          return r2.getScore()-r1.getScore();
+        }
+
+    };
 }

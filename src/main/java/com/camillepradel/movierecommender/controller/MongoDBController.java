@@ -16,10 +16,14 @@ import com.mongodb.client.MongoDatabase;
 import static com.mongodb.client.model.Filters.eq;
 import com.mongodb.client.model.UpdateOptions;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import org.bson.Document;
 
 /**
@@ -153,18 +157,53 @@ public class MongoDBController implements DBControllerInterface {
 
         users.updateOne(searchQuery,deleteDocument);
         users.updateOne(searchQuery, newDocument);
+    }
+
+    public List<Rating> ProcessRecommendationV1(Integer user_id) {
+        MongoDatabase db = MongoDBConnector.getInstance().getConnexion();
+        List<Rating> ratings_target_user = this.getRatinByUser(user_id);
         
+        MongoCursor<Document> cursor = db.getCollection("users").find().iterator();
+        List<Rating> best_user_ratings = new ArrayList<Rating>();
+        while (cursor.hasNext()) {
+                Document user = cursor.next();
+                if(Objects.equals(user.getInteger("_id"), user_id))
+                    continue;
+                List<Rating> ratings_other_user = this.getRatinByUser(user.getInteger("_id"));
+                Integer ratings_intersection = 0;
+                for(Rating ro : ratings_other_user)
+                    for(Rating rt : ratings_target_user)
+                        if( ro.getMovieId() == rt.getMovieId())
+                        {
+                            ratings_intersection += 1;
+                            break;
+                        }
+               
+                if (ratings_intersection > best_user_ratings.size())
+                    best_user_ratings = new ArrayList<Rating>(ratings_other_user);
+                ratings_other_user = null;
+                System.gc();
+        }
+        
+        List<Rating> return_ratings = new ArrayList<Rating>(best_user_ratings);
+        for(Rating rb : best_user_ratings)
+            for(Rating rt : ratings_target_user)
+                if( rb.getMovieId() == rt.getMovieId())
+                {
+                    return_ratings.remove(rb);
+                    break;
+                }
+        Collections.sort(return_ratings, Rating.CompareScoreDesc);
+        return return_ratings;
     }
 
-    public List<Rating> ProcessRecommendationV1(Integer userId) {
+    public List<Rating> ProcessRecommendationV2(Integer user_id) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public List<Rating> ProcessRecommendationV2(Integer userId) {
+    public List<Rating> ProcessRecommendationV3(Integer user_id) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+    
 
-    public List<Rating> ProcessRecommendationV3(Integer userId) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
 }
