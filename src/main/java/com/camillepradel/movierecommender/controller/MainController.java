@@ -13,23 +13,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.camillepradel.movierecommender.model.Genre;
 import com.camillepradel.movierecommender.model.Movie;
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
-import java.util.ArrayList;
-import org.bson.Document;
-import java.net.ConnectException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
 import com.camillepradel.movierecommender.model.Rating;
 
 @Controller
@@ -67,8 +50,8 @@ public class MainController {
 		System.out.println("GET /movieratings for user " + userId);
 
 		// write query to retrieve all movies from DB
-		List<Movie> allMovies = MongoDBController.getMoviesMongoDBByUser(userId);
-                //List<Movie> allMovies =Neo4JController.getMoviesNeo4JByUser(userId);
+		List<Movie> allMovies = MongoDBController.getMoviesMongoDBByUser(null);
+                //List<Movie> allMovies =Neo4JController.getMoviesNeo4JByUser(null);
 
 		// write query to retrieve all ratings from the specified user
 		List<Rating> ratings = MongoDBController.getRatingMongoDBByUser(userId);
@@ -91,7 +74,7 @@ public class MainController {
 		// TODO: add query which
 		//         - add rating between specified user and movie if it doesn't exist
 		//         - update it if it does exist
-
+                MongoDBController.updateMovieRating(rating);
 		return "redirect:/movieratings?user_id=" + rating.getUserId();
 	}
 

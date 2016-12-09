@@ -9,10 +9,15 @@ import com.camillepradel.movierecommender.model.Genre;
 import com.camillepradel.movierecommender.model.Movie;
 import com.camillepradel.movierecommender.model.Rating;
 import com.mongodb.BasicDBObject;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import static com.mongodb.client.model.Filters.eq;
+import com.mongodb.client.model.UpdateOptions;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import org.bson.Document;
@@ -114,4 +119,40 @@ public class MongoDBController {
             }
             return listRating;
         }
+
+    public static void updateMovieRating(Rating rating) {
+        ArrayList<Rating> listRating= new  ArrayList<Rating>();
+        MongoCursor<Document> cursor;
+
+        MongoDatabase db = MongoDBConnector.getInstance().getConnexion();
+        MongoCollection<Document> users = db.getCollection("users");
+
+        BasicDBObject updateQuery = new BasicDBObject();
+        BasicDBObject newDocument = new BasicDBObject();
+        BasicDBObject deleteDocument = new BasicDBObject();
+        
+        deleteDocument.append("$pull", new BasicDBObject()
+            .append("movies", new BasicDBObject()
+                .append("movieid", rating.getMovieId())
+            )
+        );
+        
+        newDocument.append("$push", new BasicDBObject()
+            .append("movies", new BasicDBObject()
+                .append("movieid", rating.getMovieId())
+                .append("rating", rating.getScore())
+                .append("timestamp", (int) (new Date().getTime()/1000))
+            )
+        );
+        
+        BasicDBObject searchQuery = new BasicDBObject()
+            .append("_id", rating.getUserId());
+        
+        FindIterable<Document> movie = users.find(searchQuery);
+        
+
+        users.updateOne(searchQuery,deleteDocument);
+        users.updateOne(searchQuery, newDocument);
+        
+    }
 }
