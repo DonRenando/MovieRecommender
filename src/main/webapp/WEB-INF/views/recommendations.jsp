@@ -12,11 +12,9 @@
 	Vos recommandations
 </h1>
 <ul>
-	<c:forEach items="${recommendations}" var="recommendation">
-		<li>
-			${recommendation.getMovie().title}
-		</li>
-	</c:forEach>
+            <c:forEach items="${recommendations}" var="recommendation">
+                <li>${recommendation.movie.title} - ${recommendation.score} / 5</li>
+            </c:forEach>
 </ul>
 
 </body>
