@@ -18,8 +18,8 @@ public class MainController {
 	String message = "Welcome to Spring MVC!";
  
         //Commenter et Decommenter en fonction de BD que l'on veut utiliser
-        DBControllerInterface db = new MongoDBController();
-        //DBControllerInterface db = new Neo4jConnector();
+        //DBControllerInterface db = new MongoDBController();
+        DBControllerInterface db = new Neo4JController();
                 
 	@RequestMapping("/hello")
 	public ModelAndView showMessage(

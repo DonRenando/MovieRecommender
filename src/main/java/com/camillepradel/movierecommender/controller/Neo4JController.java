@@ -170,8 +170,8 @@ public class Neo4JController implements DBControllerInterface {
                     + "LIMIT 5\n"
                     + "MATCH (other_user)-[rat_other_user:RATED]->(m2:Movie)\n"
                     + "WHERE NOT ((target_user)-[:RATED]->(m2))\n"
-                    + "RETURN m2.id AS mov_id, m2.title AS rec_movie_title, rat_other_user.note AS rating, other_user.id AS watched_by\n"
-                    + "ORDER BY rat_other_user.note DESC");
+                    + "RETURN m2.id AS mov_id, m2.title AS rec_movie_title, AVG(rat_other_user.note) AS rating, COUNT(other_user.id) AS watched_by\n"
+                    + "ORDER BY AVG(rat_other_user.note) DESC, COUNT(other_user.id) DESC");
 
         } catch (ConnectException ex) {
             Logger.getLogger(Neo4JController.class.getName()).log(Level.SEVERE, null, ex);
@@ -181,14 +181,16 @@ public class Neo4JController implements DBControllerInterface {
         Record record = null;
         int idMovie = 0;
         String titre = "";
-        int note = 0;
+        Double noteMoyenneDouble = 0.0;
+        Integer noteMoyenneInt = 0;
         while (result.hasNext()) {
             record = result.next();
             idMovie = record.get("mov_id").asInt();
             titre = record.get("rec_movie_title").asString();
-            note = record.get("rating").asInt();
+            noteMoyenneDouble = record.get("rating").asDouble();
+            noteMoyenneInt = noteMoyenneDouble.intValue();
 
-            ratings.add(new Rating(new Movie(idMovie, titre,null), userId, note));
+            ratings.add(new Rating(new Movie(idMovie, titre,null), userId, noteMoyenneInt));
         }
         return ratings;
 
